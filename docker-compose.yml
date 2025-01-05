@@ -1,0 +1,106 @@
+services:
+  postgres:
+    container_name: ecom_ms_pg
+    image: postgres:latest
+    ports:
+      - 5432:5432
+    environment:
+      POSTGRES_USER: ankan
+      POSTGRES_PASSWORD: ankan123
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: ecom_ms_pgadmin
+    image: dpage/pgadmin4
+    ports:
+      - 5050:80
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-pgadmin@pgadmin.org}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-admin}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    volumes:
+      - pgadmin:/var/lib/pgadmin
+    networks:
+      - microservices-net
+    restart: unless-stopped
+  mongodb:
+    container_name: ecom_ms_mongo
+    image: mongo:latest
+    ports:
+      - 27017:27017
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: ankan
+        MONGO_INITDB_ROOT_PASSWORD: ankan
+    volumes:
+      - mongo:/data
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  mongo-express:
+    container_name: ecom_ms_mongo_express
+    image: mongo-express
+    ports:
+      - 8081:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=ankan
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=ankan
+      - ME_CONFIG_MONGODB_SERVER=mongodb
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  mail-dev:
+    container_name: ecom_ms_maildev
+    image: maildev/maildev
+    ports:
+      - 1080:80
+      - 1025:25
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  zookeeper:
+    container_name: ecom_ms_zookeeper
+    image: confluentinc/cp-zookeeper:latest
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 2181:2181
+    networks:
+      - microservices-net
+    restart: unless-stopped
+  kafka:
+    container_name: ecom_ms_kafka
+    image: confluentinc/cp-kafka:latest
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+networks:
+  microservices-net:
+    driver: bridge
+
+volumes:
+  postgres:
+  pgadmin:
+  mongo:

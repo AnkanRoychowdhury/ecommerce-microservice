@@ -1,9 +1,39 @@
 services:
-  postgres:
-    container_name: ecom_ms_pg
+  postgres_product:
+    container_name: ecom_ms_pg_product
     image: postgres:latest
     ports:
       - 5432:5432
+    environment:
+      POSTGRES_USER: ankan
+      POSTGRES_PASSWORD: ankan123
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  postgres_order:
+    container_name: ecom_ms_pg_order
+    image: postgres:latest
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: ankan
+      POSTGRES_PASSWORD: ankan123
+      PGDATA: /var/lib/postgresql/data
+    volumes:
+      - postgres:/var/lib/postgresql/data
+    networks:
+      - microservices-net
+    restart: unless-stopped
+
+  postgres_payment:
+    container_name: ecom_ms_pg_payment
+    image: postgres:latest
+    ports:
+      - 5434:5432
     environment:
       POSTGRES_USER: ankan
       POSTGRES_PASSWORD: ankan123
@@ -59,8 +89,8 @@ services:
     container_name: ecom_ms_maildev
     image: maildev/maildev
     ports:
-      - 1080:80
-      - 1025:25
+      - 1080:1080
+      - 1025:1025
     networks:
       - microservices-net
     restart: unless-stopped
@@ -92,6 +122,14 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+    networks:
+      - microservices-net
+    restart: unless-stopped
+  zipkin:
+    container_name: ecom_ms_zipkin
+    image: openzipkin/zipkin
+    ports:
+      - 9411:9411
     networks:
       - microservices-net
     restart: unless-stopped
